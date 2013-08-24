@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Strilanc.Value;
@@ -13,16 +14,17 @@ internal class Program {
         var h = t.AdvancedUntilHalted();
         var n = h.MayResult;
 
-        var zz = new List<string[]>();
-
         var s = new SolomonoffInductor();
-        for (var i = 0; i < 25; i++) {
-            s.Advance(10000);
+        for (var i = 0; ; i++) {
+            s.Advance(i*i+10);
             var z = s.Predict()
-                .OrderBy(e => e.Key.Else(-1))
+                .OrderBy(e => -e.Value)
                 .Select(e => string.Format("{0}: {1:0.000000}", e.Key, (double)e.Value))
                 .ToArray();
-            zz.Add(z);
+            Console.WriteLine("=== Step: " + i);
+            foreach (var s1 in z) {
+                Console.WriteLine(s1);
+            }
             s.Measure(1, nextInput: i+1);
         }
     }

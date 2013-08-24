@@ -38,7 +38,7 @@ public static class CollectionUtil {
     /// Enumerates all of the ways that it's possible one item from each collection in a sequence.
     /// For example, the choice combinations of [[1,2],[3,4,5]] are (in some order): {[1,3],[1,4],[1,5],[2,3],[2,4],[2,5]}.
     /// </summary>
-    public static IEnumerable<IReadOnlyList<T>> AllChoiceCombinations<T>(this IEnumerable<IEnumerable<T>> sequenceOfChoices) {
+    public static IEnumerable<IReadOnlyList<T>> AllWaysToChooseSingleItemFromEachSubList<T>(this IEnumerable<IEnumerable<T>> sequenceOfChoices) {
         using (var e = sequenceOfChoices.GetEnumerator().AllChoiceCombinationsOfRemainder()) {
             while (e.MoveNext()) {
                 yield return e.Current;

@@ -24,33 +24,36 @@ public sealed class SolomonoffInductor {
     }
 
     public static IEnumerable<ImmutableDictionary<TuringMachine.InstructionSelector, TuringMachine.InstructionResult>> PossibleCompleteTuringMachineInstructionsSets() {
-        var haltState = new TuringMachine.InstructionResult(
-            newMachineState: -1, 
-            newTapeValue: false, 
-            thenMoveRightward: false);
+        var haltState = new TuringMachine.InstructionResult(-1, false, false);
+        var bools = new[] {false, true};
         return from stateCount in CollectionUtil.Naturals()
-               let inputSpace = stateCount.Range()
-                                          .Cross(new[] { false, true })
-                                          .Select(e => new TuringMachine.InstructionSelector(e.Item1, e.Item2))
-               let outputSpace = stateCount.Range()
-                                           .Cross(new[] { false, true })
-                                           .Cross(new[] { false, true })
-                                           .Select(e => new TuringMachine.InstructionResult(
-                                                            e.Item1.Item1,
-                                                            e.Item1.Item2,
-                                                            e.Item2))
-                                           .Prepend(haltState)
+               let states = stateCount.Range()
+               let inputSpace =
+                   states
+                   .Cross(bools)
+                   .Select(e => new TuringMachine.InstructionSelector(
+                                    currentMachineState: e.Item1,
+                                    currentTapeValue: e.Item2))
+               let outputSpace =
+                   states
+                   .Cross(bools)
+                   .Cross(bools)
+                   .Select(e => new TuringMachine.InstructionResult(
+                                    newMachineState: e.Item1.Item1,
+                                    newTapeValue: e.Item1.Item2,
+                                    thenMoveRightward: e.Item2))
+                   .Prepend(haltState)
                let inputsToOutputs = from input in inputSpace
                                      select from output in outputSpace
-                                            select new { input, output }
-               from mapping in inputsToOutputs.AllChoiceCombinations()
+                                            select new {input, output}
+               from mapping in inputsToOutputs.AllWaysToChooseSingleItemFromEachSubList()
                select mapping.ToImmutableDictionary(e => e.input, e => e.output);
     }
 
     private readonly AscendingPriorityQueue<Hypothesis> _runningHypotheses = new AscendingPriorityQueue<Hypothesis>();
     private readonly List<Hypothesis> _finishedHypotheses = new List<Hypothesis>();
     private readonly IEnumerator<Hypothesis> _unexploredHypotheses;
-    private static readonly BigRational Base = new BigRational(9, 10);
+    private static readonly BigRational Base = new BigRational(99, 100);
 
     public SolomonoffInductor() {
         var totalWeight = 1 / (1 - Base);

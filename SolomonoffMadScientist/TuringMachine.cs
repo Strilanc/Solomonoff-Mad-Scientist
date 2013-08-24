@@ -114,8 +114,10 @@ public sealed class TuringMachine {
         var curState = new InstructionSelector(State, Tape.Contains(Position));
         var instruction = Instructions[curState];
         var newState = instruction.NewMachineState;
+        if (newState < 0) return new TuringMachine(Instructions, Position, Tape, newState, ElapsedSteps + 1, PreviousState);
+
         var newTape = instruction.NewTapeValue ? Tape.Add(Position) : Tape.Remove(Position);
-        var newPosition = Position + (newState < 0 ? 0 : instruction.ThenMoveRightward ? 1 : -1);
+        var newPosition = Position + (instruction.ThenMoveRightward ? 1 : -1);
         var newPreviousState = ElapsedSteps.IsPowerOfTwo ? Tuple.Create(State, Tape) : PreviousState;
         return new TuringMachine(Instructions, newPosition, newTape, newState, ElapsedSteps + 1, newPreviousState);
     }
