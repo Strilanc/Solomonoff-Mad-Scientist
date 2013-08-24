@@ -95,13 +95,13 @@ public sealed class SolomonoffInductor {
             return;
         }
 
-        var s2 = r.State.Advanced(10);
+        var s2 = r.State.Advanced(100);
         var r2 = new Hypothesis(r.Prior, s2, r.MaxSeenElapsedSteps > s2.ElapsedSteps ? r.MaxSeenElapsedSteps : s2.ElapsedSteps);
         var output = r2.State.MayResult;
-        if (!output.HasValue) {
-            _runningHypotheses.Enqueue(r2);
-        } else {
+        if (output.HasValue) {
             _finishedHypotheses.Add(r2);
+        } else if (!s2.IsStuckInALoop) {
+            _runningHypotheses.Enqueue(r2);
         }
     }
 }

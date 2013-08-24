@@ -47,7 +47,9 @@ public sealed class TuringMachine {
     public readonly BigInteger State;
     public readonly ImmutableHashSet<BigInteger> Tape;
     public readonly ImmutableDictionary<InstructionSelector, InstructionResult> Instructions;
+    public readonly Tuple<BigInteger, ImmutableHashSet<BigInteger>>  PreviousState;
     public bool IsHalted { get { return Position < 0 || !Instructions.ContainsKey(new InstructionSelector(State, Tape.Contains(Position))); } }
+    public bool IsStuckInALoop { get { return Equals(PreviousState, Tuple.Create(State, Tape)); } }
 
     public TuringMachine(ImmutableDictionary<InstructionSelector, InstructionResult> instructions, BigInteger input) {
         if (instructions == null) throw new ArgumentNullException("instructions");
@@ -56,9 +58,10 @@ public sealed class TuringMachine {
         State = 0;
         ElapsedSteps = 0;
         Tape = ImmutableHashSet.Create<BigInteger>();
+        PreviousState = Tuple.Create(BigInteger.Zero, new[] { -BigInteger.One }.ToImmutableHashSet());
 
         for (var i = 0; input > 0; i++) {
-            if (!input.IsEven) Tape = Tape.Add(i);
+            Tape = Tape.Add(i*2 + (input.IsEven ? 0 : 1));
             input >>= 1;
         }
     }
@@ -66,7 +69,8 @@ public sealed class TuringMachine {
                          BigInteger position,
                          ImmutableHashSet<BigInteger> tape,
                          BigInteger state,
-                         BigInteger elapsedSteps) {
+                         BigInteger elapsedSteps,
+                         Tuple<BigInteger, ImmutableHashSet<BigInteger>> previousState) {
         if (instructions == null) throw new ArgumentNullException("instructions");
         if (tape == null) throw new ArgumentNullException("tape");
         Instructions = instructions;
@@ -74,6 +78,7 @@ public sealed class TuringMachine {
         Tape = tape;
         State = state;
         ElapsedSteps = elapsedSteps;
+        PreviousState = previousState;
     }
 
     public May<BigInteger> MayResult {
@@ -104,11 +109,14 @@ public sealed class TuringMachine {
     }
     public TuringMachine Advanced() {
         if (IsHalted) return this;
+        if (IsStuckInALoop) return this;
 
-        var instruction = Instructions[new InstructionSelector(State, Tape.Contains(Position))];
+        var curState = new InstructionSelector(State, Tape.Contains(Position));
+        var instruction = Instructions[curState];
         var newState = instruction.NewMachineState;
         var newTape = instruction.NewTapeValue ? Tape.Add(Position) : Tape.Remove(Position);
         var newPosition = Position + (newState < 0 ? 0 : instruction.ThenMoveRightward ? 1 : -1);
-        return new TuringMachine(Instructions, newPosition, newTape, newState, ElapsedSteps + 1);
+        var newPreviousState = ElapsedSteps.IsPowerOfTwo ? Tuple.Create(State, Tape) : PreviousState;
+        return new TuringMachine(Instructions, newPosition, newTape, newState, ElapsedSteps + 1, newPreviousState);
     }
 }
