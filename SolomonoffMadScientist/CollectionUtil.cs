@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
+using Numerics;
 
 public static class CollectionUtil {
+    public static BigRational Sum(this IEnumerable<BigRational> sequence) {
+        return sequence.Aggregate(BigRational.Zero, (a, e) => a + e);
+    }
     public static IEnumerable<BigInteger> Naturals() {
         for (var i = BigInteger.Zero; ; i++)
             yield return i;
+    }
+    public static IEnumerable<BigRational> Powers(this BigRational @base) {
+        for (var p = BigRational.One; ; p *= @base) {
+            yield return p;
+        }
     }
     public static IEnumerable<BigInteger> Range(this BigInteger length) {
         for (var i = BigInteger.Zero; i < length; i++)
