@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Strilanc.Value;
 
 internal class Program {
     private static void Main() {
@@ -12,30 +13,17 @@ internal class Program {
         var h = t.AdvancedUntilHalted();
         var n = h.MayResult;
 
-        var ss = SolomonoffInductor.PossibleCompleteTuringMachineInstructionsSets().Take(100).ToArray();
+        var zz = new List<string[]>();
 
         var s = new SolomonoffInductor();
-        for (var i = 0; i < 100000; i++) {
-            s.Advance();
+        for (var i = 0; i < 25; i++) {
+            s.Advance(10000);
+            var z = s.Predict()
+                .OrderBy(e => e.Key.Else(-1))
+                .Select(e => string.Format("{0}: {1:0.000000}", e.Key, (double)e.Value))
+                .ToArray();
+            zz.Add(z);
+            s.Measure(1, nextInput: i+1);
         }
-        var z = s.Predict()
-            .Select(e => string.Format("{0}: {1:0.000000}", e.Key, (double)e.Value))
-            .ToArray();
-        
-        s.Measure(1, nextInput: 1);
-        for (var i = 0; i < 100000; i++) {
-            s.Advance();
-        }
-        var z2 = s.Predict()
-            .Select(e => string.Format("{0}: {1:0.000000}", e.Key, (double)e.Value))
-            .ToArray();
-
-        s.Measure(1, nextInput: 2);
-        for (var i = 0; i < 100000; i++) {
-            s.Advance();
-        }
-        var z3 = s.Predict()
-            .Select(e => string.Format("{0}: {1:0.000000}", e.Key, (double)e.Value))
-            .ToArray();
     }
 }

@@ -80,7 +80,7 @@ public sealed class TuringMachine {
         get {
             if (!IsHalted) return May.NoValue;
             var result = BigInteger.Zero;
-            for (var i = Position - 1; i >= 0; i--) {
+            for (var i = Position; i >= 0; i--) {
                 result *= 2;
                 if (Tape.Contains(i)) result += 1;
             }
@@ -95,17 +95,20 @@ public sealed class TuringMachine {
             t = n;
         }
     }
+    public TuringMachine Advanced(int steps) {
+        var cur = this;
+        for (var i = 0; i < steps; i++) {
+            cur = cur.Advanced();
+        }
+        return cur;
+    }
     public TuringMachine Advanced() {
         if (IsHalted) return this;
 
         var instruction = Instructions[new InstructionSelector(State, Tape.Contains(Position))];
         var newState = instruction.NewMachineState;
-        if (newState < 0) {
-            // explicit halt
-            return new TuringMachine(Instructions, Position, Tape, newState, ElapsedSteps + 1);
-        }
         var newTape = instruction.NewTapeValue ? Tape.Add(Position) : Tape.Remove(Position);
-        var newPosition = Position + (instruction.ThenMoveRightward ? 1 : -1);
+        var newPosition = Position + (newState < 0 ? 0 : instruction.ThenMoveRightward ? 1 : -1);
         return new TuringMachine(Instructions, newPosition, newTape, newState, ElapsedSteps + 1);
     }
 }
